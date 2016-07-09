@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorPrimary">#0f33fe</color>
+    <color name="colorPrimaryDark">#1a237e</color>
+    <color name="colorAccent">#e43235</color>
+    <color name="colorText">#FF000000</color>
+    <color name="callsMost">#d50000</color>
+    <color name="calls1RunnerUp">#eb3600</color>
+    <color name="calls2RunnerUp">#e54800</color>
+    <color name="calls3RunnerUp">#d86d00</color>
+    <color name="calls4RunnerUp">#d27f00</color>
+    <color name="calls5RunnerUp">#c5a300</color>
+    <color name="calls6RunnerUp">#b9c800</color>
+    <color name="callsRemaining3">#a6ff00</color>
 </resources>
