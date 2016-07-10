@@ -4,9 +4,12 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.google.android.gms.maps.MapView;
+import com.trello.navi.Event;
+import com.trello.navi.NaviComponent;
+import com.trello.navi.rx.RxNavi;
 
-import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 /*
@@ -14,25 +17,9 @@ import rx.schedulers.Schedulers;
  */
 public class MapLifeCycleHolder {
     public static final String TAG = MapLifeCycleHolder.class.getSimpleName();
-    private final Observable<Bundle> onCreate;
-    private final Observable<Void> onResume;
-    private final Observable<Void> onPause;
-    private final Observable<Void> onDestroy;
-    private final Observable<Bundle> onSavedInstanceState;
+    private NaviComponent naviComponent;
 
-    public MapLifeCycleHolder(
-            Observable<Bundle> onCreate,
-            Observable<Void> onResume,
-            Observable<Void> onPause,
-            Observable<Void> onDestroy,
-            Observable<Bundle> onSavedInstanceState) {
-
-        this.onCreate = onCreate;
-        this.onResume = onResume;
-        this.onPause = onPause;
-        this.onDestroy = onDestroy;
-        this.onSavedInstanceState = onSavedInstanceState;
-    }
+    public MapLifeCycleHolder(NaviComponent naviComponent) { this.naviComponent = naviComponent; }
 
     public void addMap(final MapView mapView) {
         Log.d(TAG, "adding map");
@@ -40,8 +27,7 @@ public class MapLifeCycleHolder {
         mapView.onResume();
         Subscriber<? super Bundle> createSubscriber = new Subscriber<Bundle>() {
             @Override
-            public void onCompleted() {
-            }
+            public void onCompleted() { }
 
             @Override
             public void onError(Throwable e) {
@@ -56,8 +42,7 @@ public class MapLifeCycleHolder {
         };
         Subscriber<? super Bundle> savedInstanceStateSubscriber = new Subscriber<Bundle>() {
             @Override
-            public void onCompleted() {
-            }
+            public void onCompleted() { }
 
             @Override
             public void onError(Throwable e) {
@@ -71,9 +56,7 @@ public class MapLifeCycleHolder {
         };
         Subscriber<? super Void> resumeSubscriber = new Subscriber<Void>() {
             @Override
-            public void onCompleted() {
-
-            }
+            public void onCompleted() { }
 
             @Override
             public void onError(Throwable e) {
@@ -88,9 +71,7 @@ public class MapLifeCycleHolder {
         };
         Subscriber<? super Void> pauseSubscriber = new Subscriber<Void>() {
             @Override
-            public void onCompleted() {
-
-            }
+            public void onCompleted() { }
 
             @Override
             public void onError(Throwable e) {
@@ -106,9 +87,7 @@ public class MapLifeCycleHolder {
         };
         Subscriber<? super Void> destroySubscriber = new Subscriber<Void>() {
             @Override
-            public void onCompleted() {
-
-            }
+            public void onCompleted() { }
 
             @Override
             public void onError(Throwable e) {
@@ -121,19 +100,30 @@ public class MapLifeCycleHolder {
             }
         };
 
-        onCreate
+        RxNavi
+                .observe(naviComponent, Event.CREATE)
                 .observeOn(Schedulers.newThread())
                 .subscribe(createSubscriber);
-        onResume
+        RxNavi
+                .observe(naviComponent, Event.RESUME)
+                .doOnNext(new Action1<Void>() {
+                    @Override
+                    public void call(Void aVoid) {
+                        Log.d(TAG, "got onResume from navi OK");
+                    }
+                })
                 .observeOn(Schedulers.newThread())
                 .subscribe(resumeSubscriber);
-        onPause
+        RxNavi
+                .observe(naviComponent, Event.PAUSE)
                 .observeOn(Schedulers.newThread())
                 .subscribe(pauseSubscriber);
-        onDestroy
+        RxNavi
+                .observe(naviComponent, Event.DESTROY)
                 .observeOn(Schedulers.newThread())
                 .subscribe(destroySubscriber);
-        onSavedInstanceState
+        RxNavi
+                .observe(naviComponent, Event.SAVE_INSTANCE_STATE)
                 .observeOn(Schedulers.newThread())
                 .subscribe(savedInstanceStateSubscriber);
     }
