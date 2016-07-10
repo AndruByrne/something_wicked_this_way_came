@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="rxlifecycle-navi-0.6.1">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/app/build/intermediates/exploded-aar/com.trello/rxlifecycle-navi/0.6.1/jars/classes.jar!/" />
+      <root url="file://$PROJECT_DIR$/app/build/intermediates/exploded-aar/com.trello/rxlifecycle-navi/0.6.1/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.trello/rxlifecycle-navi/0.6.1/44a84393e227dcb439ee05dc2529d5970e418432/rxlifecycle-navi-0.6.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

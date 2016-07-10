@@ -1,6 +1,5 @@
 package com.anthropicandroid.sfcrimedata.activity;
 
-import android.app.Activity;
 import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
@@ -15,11 +14,17 @@ import android.widget.AutoCompleteTextView;
 import com.anthropicandroid.sfcrimedata.R;
 import com.anthropicandroid.sfcrimedata.SFCrimeDataApplication;
 import com.anthropicandroid.sfcrimedata.databinding.ActivityCrimeSpotsBinding;
-import com.anthropicandroid.sfcrimedata.module.ApplicationComponent;
+import com.anthropicandroid.sfcrimedata.module.ActivityComponent;
+import com.trello.navi.component.NaviActivity;
+import com.trello.rxlifecycle.ActivityLifecycleProvider;
 
 import java.util.ArrayList;
 
-public class CrimeSpotsActivity extends Activity {
+import javax.inject.Inject;
+
+public class CrimeSpotsActivity extends NaviActivity {
+
+    @Inject ActivityLifecycleProvider lifecycleProvider;
 
     public static final String TAG = CrimeSpotsActivity.class.getSimpleName();
 
@@ -27,15 +32,13 @@ public class CrimeSpotsActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SFCrimeDataApplication application = (SFCrimeDataApplication)getApplication();
-        ApplicationComponent applicationComponent = application.getApplicationComponent();
-        applicationComponent.inject(this);
+        ActivityComponent activityComponent = application.getActivityComponent(this);
+        activityComponent.inject(this);
         ActivityCrimeSpotsBinding viewDataBinding = DataBindingUtil.setContentView(
                 this,
                 R.layout.activity_crime_spots,
-                applicationComponent);
-
+                activityComponent);
         setActionBar(viewDataBinding.appBar);
-
     }
 
     @Override

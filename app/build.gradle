@@ -27,9 +27,7 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
-//    compile 'com.android.support:appcompat-v7:24.0.0'
-    // location
-//    compile 'com.google.android.gms:play-services-location:8.4.0'
+    compile 'com.google.android.gms:play-services-maps:9.2.0'
 
     //rxAndroid
     compile 'io.reactivex:rxandroid:1.1.0'
@@ -38,6 +36,7 @@ dependencies {
     compile 'io.reactivex:rxjava:1.1.0'
     compile 'com.trello:navi:0.2.1'
     compile 'com.trello:rxlifecycle:0.6.1'
+    compile 'com.trello:rxlifecycle-navi:0.6.1'
     // dagger and viz
     // Dagger and viz
     apt 'com.google.dagger:dagger-compiler:2.2'
