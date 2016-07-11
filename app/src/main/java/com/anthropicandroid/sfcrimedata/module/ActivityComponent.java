@@ -25,11 +25,14 @@ import rx.Observable;
         modules = {
                 NaviModule.class,
                 MapLifeCycleHolderModule.class,
-                MapMarkerModule.class
+                MapMarkerModule.class,
+                DistrictNamesModule.class
         })
-public interface ActivityComponent extends DataBindingComponent{
+public interface ActivityComponent extends DataBindingComponent {
     void inject(CrimeSpotsActivity crimeSpotsActivity);
+
     MapLifeCycleHolder getMapLifeCycleHolder();
+
     ActivityLifecycleProvider getActivityLifecycleProvider();
 
     Observable<JSONObject> getMarkers();

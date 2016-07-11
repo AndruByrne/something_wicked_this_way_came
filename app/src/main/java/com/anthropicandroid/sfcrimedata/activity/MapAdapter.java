@@ -7,12 +7,9 @@ import com.anthropicandroid.sfcrimedata.module.ActivityComponent;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.geojson.GeoJsonLayer;
 
 import org.json.JSONObject;
-
-import java.util.List;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -47,7 +44,9 @@ public class MapAdapter {
     public static void getDaysToReflect(
             ActivityComponent activityComponent,
             MapView mapView,
-            Integer days) {
+            String district) {
+        if(district==null) Log.d(TAG, "district is null");
+        else Log.d(TAG, "district is: "+district);
         // give the map updates from lifecycle
         activityComponent.getMapLifeCycleHolder().addMap(mapView);
         // get the map
@@ -98,21 +97,7 @@ public class MapAdapter {
                         subscriber.onNext(googleMap);
                     }
                 });
-
             }
         }).subscribeOn(AndroidSchedulers.mainThread());
-    }
-
-    private static class MapAndMarkers {
-        final GoogleMap googleMap;
-        final List<MarkerOptions> markerOptionses;
-
-        public MapAndMarkers(
-                GoogleMap googleMap,
-                List<MarkerOptions> markerOptionses) {
-
-            this.googleMap = googleMap;
-            this.markerOptionses = markerOptionses;
-        }
     }
 }

@@ -17,6 +17,10 @@ public class MapMarkerModule {
     @NaviActivityScope
     Observable<JSONObject> getMarkers(){
         JSONObject dummyJsonData = new JSONObject();
+//        return Observable.concat(
+//                dataStoreObs,
+//                networkObs, //  no update to data store will make this network obs empty
+//                searchActionObs);
         return Observable.just(dummyJsonData);
     }
 }

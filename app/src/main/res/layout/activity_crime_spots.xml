@@ -6,7 +6,9 @@
     >
 
     <data>
-        <import type="java.lang.Integer"/>
+        <variable
+            name="district"
+            type="java.lang.String"/>
 
     </data>
 
@@ -23,13 +25,14 @@
             android:layout_alignParentTop="true"
             android:background="?android:attr/colorPrimary"
             android:elevation="@dimen/action_bar_elevation"
+            android:alpha=".8"
             android:theme="@style/BlueRed"/>
 
         <com.google.android.gms.maps.MapView
             android:id="@+id/map_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:daysToReflect="@{Integer.valueOf(30)}"
+            app:daysToReflect="@{district}"
             app:cameraTargetLat="37.764528"
             app:cameraTargetLng="-122.4437771"
             app:cameraZoom="13"
