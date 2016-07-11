@@ -9,7 +9,7 @@ import com.trello.navi.NaviComponent;
 import com.trello.navi.rx.RxNavi;
 
 import rx.Subscriber;
-import rx.functions.Action1;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
 /*
@@ -22,7 +22,7 @@ public class MapLifeCycleHolder {
     public MapLifeCycleHolder(NaviComponent naviComponent) { this.naviComponent = naviComponent; }
 
     public void addMap(final MapView mapView) {
-        Log.d(TAG, "adding map");
+        // map appears after onCreate and onResume, so must give it those commands manually
         mapView.onCreate(new Bundle());
         mapView.onResume();
         Subscriber<? super Bundle> createSubscriber = new Subscriber<Bundle>() {
@@ -35,10 +35,7 @@ public class MapLifeCycleHolder {
             }
 
             @Override
-            public void onNext(Bundle bundle) {
-                Log.d(TAG, " got obnNExt to forward to mapViewe ");
-                mapView.onCreate(bundle);
-            }
+            public void onNext(Bundle bundle) { mapView.onCreate(bundle); }
         };
         Subscriber<? super Bundle> savedInstanceStateSubscriber = new Subscriber<Bundle>() {
             @Override
@@ -50,9 +47,7 @@ public class MapLifeCycleHolder {
             }
 
             @Override
-            public void onNext(Bundle bundle) {
-                mapView.onSaveInstanceState(bundle);
-            }
+            public void onNext(Bundle bundle) { mapView.onSaveInstanceState(bundle); }
         };
         Subscriber<? super Void> resumeSubscriber = new Subscriber<Void>() {
             @Override
@@ -64,10 +59,7 @@ public class MapLifeCycleHolder {
             }
 
             @Override
-            public void onNext(Void aVoid) {
-                Log.d(TAG, " got resume to forward to mapViewe ");
-                mapView.onResume();
-            }
+            public void onNext(Void aVoid) { mapView.onResume(); }
         };
         Subscriber<? super Void> pauseSubscriber = new Subscriber<Void>() {
             @Override
@@ -79,11 +71,7 @@ public class MapLifeCycleHolder {
             }
 
             @Override
-            public void onNext(Void aVoid) {
-                Log.d(TAG, " got pause to forward to mapViewe ");
-
-                mapView.onPause();
-            }
+            public void onNext(Void aVoid) { mapView.onPause(); }
         };
         Subscriber<? super Void> destroySubscriber = new Subscriber<Void>() {
             @Override
@@ -106,13 +94,7 @@ public class MapLifeCycleHolder {
                 .subscribe(createSubscriber);
         RxNavi
                 .observe(naviComponent, Event.RESUME)
-                .doOnNext(new Action1<Void>() {
-                    @Override
-                    public void call(Void aVoid) {
-                        Log.d(TAG, "got onResume from navi OK");
-                    }
-                })
-                .observeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(resumeSubscriber);
         RxNavi
                 .observe(naviComponent, Event.PAUSE)

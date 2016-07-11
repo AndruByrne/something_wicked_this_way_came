@@ -9,9 +9,13 @@ import android.databinding.DataBindingComponent;
 
 import com.anthropicandroid.sfcrimedata.activity.CrimeSpotsActivity;
 import com.anthropicandroid.sfcrimedata.activity.MapLifeCycleHolder;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.trello.rxlifecycle.ActivityLifecycleProvider;
 
+import java.util.ArrayList;
+
 import dagger.Component;
+import rx.Observable;
 
 
 @NaviActivityScope
@@ -21,10 +25,13 @@ import dagger.Component;
         },
         modules = {
                 NaviModule.class,
-                MapLifeCycleHolderModule.class
+                MapLifeCycleHolderModule.class,
+                MapMarkerModule.class
         })
 public interface ActivityComponent extends DataBindingComponent{
     void inject(CrimeSpotsActivity crimeSpotsActivity);
     MapLifeCycleHolder getMapLifeCycleHolder();
     ActivityLifecycleProvider getActivityLifecycleProvider();
+
+    Observable<ArrayList<MarkerOptions>> getMarkers();
 }
