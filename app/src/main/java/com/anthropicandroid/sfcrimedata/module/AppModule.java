@@ -5,6 +5,7 @@ package com.anthropicandroid.sfcrimedata.module;
  */
 
 import android.app.Application;
+import android.content.Context;
 
 import dagger.Module;
 import dagger.Provides;
@@ -17,4 +18,6 @@ public class AppModule {
     public AppModule(Application application){ this.application = application; }
 
     @Provides Application getApplication(){ return application; }
+
+    @Provides Context getContext(){ return application; }
 }

@@ -4,7 +4,10 @@ package com.anthropicandroid.sfcrimedata.module;
  * Created by Andrew Brin on 7/10/2016.
  */
 
-import org.json.JSONObject;
+import com.anthropicandroid.sfcrimedata.services.DataStore;
+import com.anthropicandroid.sfcrimedata.services.MarkerService;
+
+import javax.inject.Named;
 
 import dagger.Module;
 import dagger.Provides;
@@ -15,12 +18,13 @@ public class MapMarkerModule {
 
     @Provides
     @NaviActivityScope
-    Observable<JSONObject> getMarkers(){
-        JSONObject dummyJsonData = new JSONObject();
-//        return Observable.concat(
-//                dataStoreObs,
-//                networkObs, //  no update to data store will make this network obs empty
-//                searchActionObs);
-        return Observable.just(dummyJsonData);
+    MarkerService getMarkerService(DataStore dataStore, @Named("NetworkOverwrite") Observable<Boolean> networkOverwrite){
+        return new MarkerService(dataStore, networkOverwrite);
+    }
+
+    @Provides
+    @NaviActivityScope
+    @Named("NetworkOverwrite") Observable<Boolean> networkOverwrite(){
+        return Observable.just(true);
     }
 }

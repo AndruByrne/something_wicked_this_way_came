@@ -9,9 +9,13 @@ import android.databinding.DataBindingComponent;
 
 import com.anthropicandroid.sfcrimedata.activity.CrimeSpotsActivity;
 import com.anthropicandroid.sfcrimedata.activity.MapLifeCycleHolder;
+import com.anthropicandroid.sfcrimedata.services.MarkerService;
+import com.google.maps.android.geojson.GeoJsonLayer;
 import com.trello.rxlifecycle.ActivityLifecycleProvider;
 
-import org.json.JSONObject;
+import java.util.List;
+
+import javax.inject.Named;
 
 import dagger.Component;
 import rx.Observable;
@@ -26,7 +30,8 @@ import rx.Observable;
                 NaviModule.class,
                 MapLifeCycleHolderModule.class,
                 MapMarkerModule.class,
-                DistrictNamesModule.class
+                DistrictNamesModule.class,
+                DataStoreModule.class
         })
 public interface ActivityComponent extends DataBindingComponent {
     void inject(CrimeSpotsActivity crimeSpotsActivity);
@@ -35,5 +40,9 @@ public interface ActivityComponent extends DataBindingComponent {
 
     ActivityLifecycleProvider getActivityLifecycleProvider();
 
-    Observable<JSONObject> getMarkers();
+    MarkerService getMarkerService();
+
+    @Named("DistrictNames") Observable<List<String>> getDistrictNames();
+
+    List<GeoJsonLayer> getLayerRegister();
 }

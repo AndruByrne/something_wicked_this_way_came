@@ -4,17 +4,21 @@ import android.databinding.BindingAdapter;
 import android.util.Log;
 
 import com.anthropicandroid.sfcrimedata.module.ActivityComponent;
+import com.anthropicandroid.sfcrimedata.services.MarkerService;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.maps.android.geojson.GeoJsonLayer;
+import com.trello.rxlifecycle.ActivityLifecycleProvider;
 
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import rx.Observable;
 import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func2;
 
@@ -38,39 +42,58 @@ import rx.functions.Func2;
 public class MapAdapter {
 
     public static final String TAG = MapAdapter.class.getSimpleName();
-    private static GeoJsonLayer currentLayer;
 
-    @BindingAdapter("daysToReflect")
-    public static void getDaysToReflect(
-            ActivityComponent activityComponent,
-            MapView mapView,
+    @BindingAdapter("districtToReflect")
+    public static void getDistrictToReflect(
+            final ActivityComponent activityComponent,
+            final MapView mapView,
             String district) {
-        if(district==null) Log.d(TAG, "district is null");
-        else Log.d(TAG, "district is: "+district);
+        if (district == null) Log.d(TAG, "district is null");
+        else Log.d(TAG, "district is: " + district);
+        // get lifecycle provider
+        ActivityLifecycleProvider activityLifecycleProvider = activityComponent
+                .getActivityLifecycleProvider();
         // give the map updates from lifecycle
         activityComponent.getMapLifeCycleHolder().addMap(mapView);
         // get the map
         Observable<GoogleMap> theMap = getTheMap(mapView);
+        // sanitize district string
+        if (!validDistrict(district, activityComponent.getDistrictNames()))
+            district = null;
         // give the map updates from model
+        MarkerService markerService = activityComponent.getMarkerService();
         Observable
                 .combineLatest(
                         theMap,
-                        activityComponent.getMarkers(),
-                        new Func2<GoogleMap, JSONObject, GeoJsonLayer>() {
+                        district == null
+                                ? markerService.getAllMarkers()
+                                : markerService.getMarkersForDistrict(district),
+                        new Func2<GoogleMap, List<JSONObject>, List<GeoJsonLayer>>() {
                             @Override
-                            public GeoJsonLayer call(GoogleMap googleMap, JSONObject markers) {
-                                return new GeoJsonLayer(googleMap, markers);
+                            public List<GeoJsonLayer> call(
+                                    final GoogleMap googleMap,
+                                    final List<JSONObject> jsonObjects) {
+                                return new ArrayList<GeoJsonLayer>() {{
+                                    for (JSONObject jsonObject : jsonObjects)
+                                        add(new GeoJsonLayer(googleMap, jsonObject));
+                                }};
                             }
                         })
+                .compose(activityLifecycleProvider.<List<GeoJsonLayer>>bindToLifecycle())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        new Action1<GeoJsonLayer>() {
+                        new Action1<List<GeoJsonLayer>>() {
                             @Override
-                            public void call(GeoJsonLayer layer) {
-                                if (currentLayer != null)
-                                    currentLayer.removeLayerFromMap();
-                                layer.addLayerToMap();
-                                currentLayer = layer;
+                            public void call(List<GeoJsonLayer> geoJsonLayers) {
+                                List<GeoJsonLayer> layerRegister = activityComponent
+                                        .getLayerRegister();
+                                for (GeoJsonLayer oldLayer : layerRegister)
+                                    oldLayer.removeLayerFromMap();
+                                layerRegister.clear();
+                                for (GeoJsonLayer layer : geoJsonLayers) {
+                                    activityComponent.getLayerRegister().add(layer);
+                                    layer.addLayerToMap();
+                                }
                             }
                         },
                         new Action1<Throwable>() {
@@ -79,12 +102,18 @@ public class MapAdapter {
                                 Log.e(TAG, "error in map adapter data feed: " + throwable
                                         .getMessage());
                                 throwable.printStackTrace();
+
                             }
-                        },
-                        new Action0() {
-                            @Override
-                            public void call() { }
-                        });
+                        }
+                );
+    }
+
+    private static boolean validDistrict(
+            String district,
+            Observable<List<String>> districtNames) {
+        if (district == null) return true;
+        List<String> districts = districtNames.toBlocking().first();
+        return districts.contains(district);
     }
 
     private static Observable<GoogleMap> getTheMap(final MapView mapView) {

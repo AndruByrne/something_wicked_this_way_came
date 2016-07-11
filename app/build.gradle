@@ -29,8 +29,10 @@ dependencies {
     testCompile 'junit:junit:4.12'
     // android maps and map utils
     compile 'com.google.android.gms:play-services-maps:9.2.0'
-    compile 'com.google.maps.android:android-maps-utils:0.4+'
-    //rxAndroid
+    compile 'com.google.maps.android:android-maps-utils:0.4.3'
+    // waspDB
+    compile 'com.github.rehacktive:waspdb:1.1.1'
+    // rxAndroid
     compile 'io.reactivex:rxandroid:1.1.0'
     // Because RxAndroid releases are few and far between, it is recommended you also
     // explicitly depend on RxJava's latest version for bug fixes and new features.

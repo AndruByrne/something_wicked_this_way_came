@@ -37,7 +37,7 @@ import rx.functions.Action1;
 public class CrimeSpotsActivity extends NaviActivity {
 
     @Inject ActivityLifecycleProvider lifecycleProvider;
-    @Inject @Named("DistrictNames") Observable<ArrayList<String>> districtNames;
+    @Inject @Named("DistrictNames") Observable<List<String>> districtNames;
 
     public static final String TAG = CrimeSpotsActivity.class.getSimpleName();
     private ActivityCrimeSpotsBinding viewDataBinding;
@@ -70,6 +70,7 @@ public class CrimeSpotsActivity extends NaviActivity {
                 new ArrayList<String>());
 
         districtNames
+                .compose(lifecycleProvider.<List<String>>bindToLifecycle())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         new Action1<List<String>>() {

@@ -32,7 +32,7 @@
             android:id="@+id/map_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:daysToReflect="@{district}"
+            app:districtToReflect="@{district}"
             app:cameraTargetLat="37.764528"
             app:cameraTargetLng="-122.4437771"
             app:cameraZoom="13"

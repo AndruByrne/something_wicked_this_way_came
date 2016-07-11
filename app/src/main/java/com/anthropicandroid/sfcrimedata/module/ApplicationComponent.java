@@ -4,6 +4,8 @@ package com.anthropicandroid.sfcrimedata.module;
  * Created by Andrew Brin on 7/8/2016.
  */
 
+import android.content.Context;
+
 import javax.inject.Singleton;
 
 import dagger.Component;
@@ -13,4 +15,5 @@ import dagger.Component;
         AppModule.class})
 public interface ApplicationComponent {
 
+    Context getContext();
 }
