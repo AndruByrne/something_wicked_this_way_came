@@ -9,10 +9,9 @@ import android.databinding.DataBindingComponent;
 
 import com.anthropicandroid.sfcrimedata.activity.CrimeSpotsActivity;
 import com.anthropicandroid.sfcrimedata.activity.MapLifeCycleHolder;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.trello.rxlifecycle.ActivityLifecycleProvider;
 
-import java.util.ArrayList;
+import org.json.JSONObject;
 
 import dagger.Component;
 import rx.Observable;
@@ -33,5 +32,5 @@ public interface ActivityComponent extends DataBindingComponent{
     MapLifeCycleHolder getMapLifeCycleHolder();
     ActivityLifecycleProvider getActivityLifecycleProvider();
 
-    Observable<ArrayList<MarkerOptions>> getMarkers();
+    Observable<JSONObject> getMarkers();
 }

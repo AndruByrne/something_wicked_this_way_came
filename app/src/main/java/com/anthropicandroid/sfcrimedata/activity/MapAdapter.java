@@ -8,6 +8,9 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.geojson.GeoJsonLayer;
+
+import org.json.JSONObject;
 
 import java.util.List;
 
@@ -20,10 +23,25 @@ import rx.functions.Func2;
 
 /*
  * Created by Andrew Brin on 7/10/2016.
+ *
+ *
+ * Because of the following record-keeping issue, I cannot display markers for the districts that
+  * would accuratly reflect the areas covered; my fall-back is to use markers which are colored
+  * differently based on district reporting levels
+  *
+  *
+ * As of July 19, 2015, the PD District boundaries have been updated through a redistricting
+ * process. These new boundaries are not reflected in the dataset yet so you cannot compare data
+ * from July 19, 2015 onward to official reports from PD with the Police District column. We are
+ * working on an update to the dataset to reflect the updated boundaries starting with data
+ * entered July 19 onward.
+ *
+ *
  */
 public class MapAdapter {
 
     public static final String TAG = MapAdapter.class.getSimpleName();
+    private static GeoJsonLayer currentLayer;
 
     @BindingAdapter("daysToReflect")
     public static void getDaysToReflect(
@@ -39,21 +57,21 @@ public class MapAdapter {
                 .combineLatest(
                         theMap,
                         activityComponent.getMarkers(),
-                        new Func2<GoogleMap, List<MarkerOptions>, MapAndMarkers>() {
+                        new Func2<GoogleMap, JSONObject, GeoJsonLayer>() {
                             @Override
-                            public MapAndMarkers call(
-                                    GoogleMap googleMap,
-                                    List<MarkerOptions> markerOptionses) {
-                                return new MapAndMarkers(googleMap, markerOptionses);
+                            public GeoJsonLayer call(GoogleMap googleMap, JSONObject markers) {
+                                return new GeoJsonLayer(googleMap, markers);
                             }
                         })
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
-                        new Action1<MapAndMarkers>() {
+                        new Action1<GeoJsonLayer>() {
                             @Override
-                            public void call(MapAndMarkers mapAndMarkers) {
-                                for (MarkerOptions marker : mapAndMarkers.markerOptionses)
-                                    mapAndMarkers.googleMap.addMarker(marker);
+                            public void call(GeoJsonLayer layer) {
+                                if (currentLayer != null)
+                                    currentLayer.removeLayerFromMap();
+                                layer.addLayerToMap();
+                                currentLayer = layer;
                             }
                         },
                         new Action1<Throwable>() {
