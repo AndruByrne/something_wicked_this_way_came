@@ -31,6 +31,7 @@ import dagger.Module;
 import dagger.Provides;
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Action1;
 import rx.functions.Action2;
 import rx.functions.Func0;
 import rx.functions.Func1;
@@ -79,6 +80,12 @@ public class MapMarkerModule {
         Log.d(TAG, "query String: " + queryString);
         ConnectableObservable<Boolean> replay = sfpdInterface
                 .getIncidents()
+                .doOnNext(new Action1<List<JsonObject>>() {
+                    @Override
+                    public void call(List<JsonObject> jsonObjects) {
+                        Log.d(TAG, "got response from network");
+                    }
+                })
                 .flatMap(new Func1<List<JsonObject>, Observable<Boolean>>() {
                     @Override
                     public Observable<Boolean> call(List<JsonObject> jsonObjects) {
@@ -154,65 +161,60 @@ public class MapMarkerModule {
                 .flatMap(new Func1<Map<String, ArrayList<JsonObject>>, Observable<Boolean>>() {
                     @Override
                     public Observable<Boolean> call(
-                            final Map<String, ArrayList<JsonObject>>
-                                    districtToIncidentsMapping) {
+                            final Map<String, ArrayList<JsonObject>> districtToIncidentsMapping) {
                         return Observable.zip(
                                 getOrder(districtToIncidentsMapping),
                                 Observable.from(markerColors),
-                                new Func2<String, String, Boolean>() {
-                                    @Override
-                                    public Boolean call(
-                                            final String district, final
-                                    String color) {
-                                        return Observable
-                                                .from(districtToIncidentsMapping.get(district))
-                                                .map(new Func1<JsonObject, JSONObject>() {
-                                                    @Override
-                                                    public JSONObject call(JsonObject jsonObject) {
-                                                        JsonObject marker = convertToMarker(
-                                                                jsonObject,
-                                                                color);
-                                                        try {
-                                                            return new JSONObject(marker.getAsString());
-                                                        } catch (JSONException e) {
-                                                            Log.e(
-                                                                    TAG,
-                                                                    "Error creating JSON: "
-                                                                            + e.getMessage());
-                                                            e.printStackTrace();
-                                                        }
-                                                        return null;
-                                                    }
-                                                })
-                                                .filter(getNullFilter())
-                                                .toList()
-                                                .map(new Func1<List<JSONObject>, Boolean>() {
-                                                    @Override
-                                                    public Boolean call(List<JSONObject> markers) {
-                                                        return (Boolean) dataStore
-                                                                .setMarkersForDistrict(
-                                                                        markers,
-                                                                        district).toBlocking()
-                                                                .first();
-                                                    }
-                                                }).toBlocking().first();
-                                    }
-                                }
+                                markerCreateZipFunction(districtToIncidentsMapping, dataStore)
                         );
                     }
                 })
-                .collect( //  are all saves successful?
-                        new Func0<Boolean>() {
+                .reduce(false, new Func2<Boolean, Boolean, Boolean>() {
+                    @Override
+                    public Boolean call(Boolean accumulator, Boolean aBoolean) {
+                        if(!accumulator) accumulator = aBoolean;
+                        return accumulator;
+                    }
+                });
+    }
+
+    @NonNull
+    private Func2<String, String, Boolean> markerCreateZipFunction(
+            final Map<String, ArrayList<JsonObject>> districtToIncidentsMapping,
+            final DataStore dataStore) {
+        final Gson gson = new Gson();
+        return new Func2<String, String, Boolean>() {
+            @Override
+            public Boolean call(final String district, final String color) {
+                return Observable
+                        .from(districtToIncidentsMapping.get(district))
+                        .map(new Func1<JsonObject, JSONObject>() {
                             @Override
-                            public Boolean call() {
-                                return false;
+                            public JSONObject call(JsonObject jsonObject) {
+                                String json = gson.toJson(convertToMarker(jsonObject, color));
+                                try {
+                                    return new JSONObject(json);
+                                } catch (JSONException e) {
+                                    Log.e(TAG, "Error creating JSON: " + e.getMessage());
+                                    e.printStackTrace();
+                                }
+                                return null;
                             }
-                        }, new Action2<Boolean, Boolean>() {
+                        })
+                        .filter(getNullFilter())
+                        .toList()
+                        .map(new Func1<List<JSONObject>, Boolean>() {
                             @Override
-                            public void call(Boolean collectingBoolean, Boolean aBoolean) {
-                                if (!collectingBoolean) collectingBoolean = aBoolean;
+                            public Boolean call(List<JSONObject> markers) {
+                                return dataStore
+                                        .setMarkersForDistrict(
+                                                markers,
+                                                district).toBlocking()
+                                        .first();
                             }
-                        });
+                        }).toBlocking().first();
+            }
+        };
     }
 
     private Observable<String> getOrder(
@@ -226,7 +228,7 @@ public class MapMarkerModule {
                         ()) {
                     int proposedKey = entry.getValue().size();
                     while (treeMap.containsKey(proposedKey))
-                        proposedKey--;
+                        proposedKey--; // if even, one will be lower
                     treeMap.put(proposedKey, entry.getKey());
                 }
                 for (Integer count : treeMap.descendingKeySet())

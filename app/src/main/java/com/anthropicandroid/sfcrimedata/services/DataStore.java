@@ -26,7 +26,6 @@ public class DataStore {
     public static final String TAG = DataStore.class.getSimpleName();
     private WaspDb waspDb;
     private final ConnectableObservable<Boolean> dbCreate;
-    private WaspHash districtActivityHash;
     private WaspHash districtDataHash;
 
     public DataStore(final Context context) {
@@ -58,8 +57,8 @@ public class DataStore {
     private void initTables(WaspDb waspDb) {
         if (this.waspDb == null) {
             this.waspDb = waspDb;
-            districtActivityHash = waspDb.openOrCreateHash("DistrictActivityHash");
             districtDataHash = waspDb.openOrCreateHash("DistrictDataHash");
+            districtDataHash.flush(); // keeping things simple
         }
 
     }
@@ -78,7 +77,8 @@ public class DataStore {
                 .map(new Func1<Boolean, List<JSONObject>>() {
                     @Override
                     public List<JSONObject> call(Boolean aBoolean) {
-                        return districtDataHash.get(district);
+                        List<JSONObject> jsonObjects = districtDataHash.get(district);
+                        return jsonObjects;
                     }
                 });
     }
@@ -90,7 +90,7 @@ public class DataStore {
                 .map(new Func1<Boolean, Boolean>() {
                     @Override
                     public Boolean call(Boolean aBoolean) {
-                        List oldMarkers = districtDataHash.get(district);
+                        List<JSONObject> oldMarkers = districtDataHash.get(district);
                         if (oldMarkers == null) {
                             districtDataHash.put(district, newMarkers);
                             return true;

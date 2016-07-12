@@ -4,15 +4,12 @@ package com.anthropicandroid.sfcrimedata.services;
  * Created by Andrew Brin on 7/10/2016.
  */
 
-import android.util.Log;
-
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import rx.Observable;
-import rx.functions.Action1;
 import rx.functions.Action2;
 import rx.functions.Func0;
 import rx.functions.Func1;
@@ -32,14 +29,7 @@ public class MarkerService {
     public Observable<List<JSONObject>> getMarkersForDistrict(final String district) {
         return Observable
                 .merge(
-                        dataStore
-                                .getMarkersForDistrict(district)
-                                .doOnNext(new Action1<List<JSONObject>>() {
-                                    @Override
-                                    public void call(List<JSONObject> jsonObjects) {
-                                        Log.d(TAG, "got markers from first");
-                                    }
-                                }),
+                        dataStore.getMarkersForDistrict(district),
                         networkOverwrite
                                 .flatMap(new Func1<Boolean, Observable<List<JSONObject>>>() {
                                     @Override
@@ -80,7 +70,6 @@ public class MarkerService {
     }
 
     private Observable<List<JSONObject>> getAllMarkersObservable() {
-        Log.d(TAG, "getAllMakrers Obs");
         return dataStore
                 .getStoredDistricts()
                 .first()
@@ -104,11 +93,12 @@ public class MarkerService {
                                     public void call(
                                             List<JSONObject> jsonObjects,
                                             String district) {
-                                        jsonObjects.addAll(
-                                                getMarkersForDistrict(district)
-                                                        .take(1)
-                                                        .toBlocking()
-                                                        .first());
+                                        List<JSONObject> markers = getMarkersForDistrict(district)
+                                                .take(1)
+                                                .toBlocking()
+                                                .first();
+                                        if (markers.size() > 0)
+                                            jsonObjects.addAll(markers);
                                     }
                                 });
                     }

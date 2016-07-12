@@ -48,8 +48,6 @@ public class MapAdapter {
             final ActivityComponent activityComponent,
             final MapView mapView,
             String district) {
-        if (district == null) Log.d(TAG, "district is null");
-        else Log.d(TAG, "district is: " + district);
         // get lifecycle provider
         ActivityLifecycleProvider activityLifecycleProvider = activityComponent
                 .getActivityLifecycleProvider();
@@ -73,8 +71,6 @@ public class MapAdapter {
                             public List<GeoJsonLayer> call(
                                     final GoogleMap googleMap,
                                     final List<JSONObject> jsonObjects) {
-                                Log.d(TAG, "This is supposed to be a list of json bojects: " +
-                                        ""+jsonObjects);
                                 return new ArrayList<GeoJsonLayer>() {{
                                     for (JSONObject jsonObject : jsonObjects)
                                             add(new GeoJsonLayer(googleMap, jsonObject));
