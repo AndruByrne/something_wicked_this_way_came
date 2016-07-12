@@ -73,9 +73,11 @@ public class MapAdapter {
                             public List<GeoJsonLayer> call(
                                     final GoogleMap googleMap,
                                     final List<JSONObject> jsonObjects) {
+                                Log.d(TAG, "This is supposed to be a list of json bojects: " +
+                                        ""+jsonObjects);
                                 return new ArrayList<GeoJsonLayer>() {{
                                     for (JSONObject jsonObject : jsonObjects)
-                                        add(new GeoJsonLayer(googleMap, jsonObject));
+                                            add(new GeoJsonLayer(googleMap, jsonObject));
                                 }};
                             }
                         })

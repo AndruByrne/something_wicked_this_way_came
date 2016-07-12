@@ -24,16 +24,9 @@ public class DistrictNamesModule {
     Observable<List<String>> getDistrictNames(
             final DataStore dataStore,
             @Named("NetworkOverwrite") Observable<Boolean> networkOverwrite) {
-//        final ArrayList<String> tempDistricts = new ArrayList<String>() {{
-//            add("NORTHERN");
-//            add("SOUTHERN");
-//            add("VALDERON");
-//            add("MORIA");
-//        }};
-//        return Observable.just(tempDistricts);
 
         return Observable
-                .concat(
+                .merge(
                         dataStore.getStoredDistricts(),
                         networkOverwrite.flatMap(new Func1<Boolean, Observable<List<String>>>() {
                             @Override
@@ -46,6 +39,7 @@ public class DistrictNamesModule {
                 .filter(new Func1<List<String>, Boolean>() {
                     @Override
                     public Boolean call(List<String> strings) {
+                        if(strings==null) return false;
                         return strings.size() > 0;
                     }
                 });

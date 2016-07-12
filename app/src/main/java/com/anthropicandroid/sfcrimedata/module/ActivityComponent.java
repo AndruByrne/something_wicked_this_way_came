@@ -31,7 +31,8 @@ import rx.Observable;
                 MapLifeCycleHolderModule.class,
                 MapMarkerModule.class,
                 DistrictNamesModule.class,
-                DataStoreModule.class
+                DataStoreModule.class,
+                NetworkModule.class
         })
 public interface ActivityComponent extends DataBindingComponent {
     void inject(CrimeSpotsActivity crimeSpotsActivity);

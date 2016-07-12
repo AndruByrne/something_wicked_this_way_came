@@ -12,9 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import rx.Observable;
+import rx.functions.Action1;
 import rx.functions.Action2;
 import rx.functions.Func0;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 public class MarkerService {
 
@@ -29,8 +31,15 @@ public class MarkerService {
 
     public Observable<List<JSONObject>> getMarkersForDistrict(final String district) {
         return Observable
-                .concat(
-                        dataStore.getMarkersForDistrict(district),
+                .merge(
+                        dataStore
+                                .getMarkersForDistrict(district)
+                                .doOnNext(new Action1<List<JSONObject>>() {
+                                    @Override
+                                    public void call(List<JSONObject> jsonObjects) {
+                                        Log.d(TAG, "got markers from first");
+                                    }
+                                }),
                         networkOverwrite
                                 .flatMap(new Func1<Boolean, Observable<List<JSONObject>>>() {
                                     @Override
@@ -45,12 +54,13 @@ public class MarkerService {
                     public Boolean call(List<JSONObject> jsonObjects) {
                         return jsonObjects.size() > 0;
                     }
-                });
+                })
+                .subscribeOn(Schedulers.io());
     }
 
     public Observable<List<JSONObject>> getAllMarkers() {
         return Observable
-                .concat(
+                .merge(
                         getAllMarkersObservable(),
                         networkOverwrite
                                 .flatMap(new Func1<Boolean, Observable<List<JSONObject>>>() {
@@ -74,30 +84,35 @@ public class MarkerService {
         return dataStore
                 .getStoredDistricts()
                 .first()
+                .filter(new Func1<List<String>, Boolean>() {
+                    @Override
+                    public Boolean call(List<String> strings) {
+                        return strings != null;
+                    }
+                })
                 .flatMap(new Func1<List<String>, Observable<List<JSONObject>>>() {
                     @Override
                     public Observable<List<JSONObject>> call(List<String> districts) {
-                        return Observable
-                                .from(districts)
-                                .collect(
-                                        new Func0<List<JSONObject>>() {
-                                            @Override
-                                            public List<JSONObject> call() {
-                                                return new ArrayList<>();
-                                            }
-                                        }, new Action2<List<JSONObject>, String>() {
-                                            @Override
-                                            public void call(
-                                                    List<JSONObject> jsonObjects,
-                                                    String district) {
-                                                jsonObjects.addAll(
-                                                        getMarkersForDistrict(district)
-                                                                .take(1)
-                                                                .toBlocking()
-                                                                .first());
-                                            }
-                                        });
+                        return Observable.from(districts).collect(
+                                new Func0<List<JSONObject>>() {
+                                    @Override
+                                    public List<JSONObject> call() {
+                                        return new ArrayList<>();
+                                    }
+                                }, new Action2<List<JSONObject>, String>() {
+                                    @Override
+                                    public void call(
+                                            List<JSONObject> jsonObjects,
+                                            String district) {
+                                        jsonObjects.addAll(
+                                                getMarkersForDistrict(district)
+                                                        .take(1)
+                                                        .toBlocking()
+                                                        .first());
+                                    }
+                                });
                     }
-                });
+                })
+                .subscribeOn(Schedulers.io());
     }
 }

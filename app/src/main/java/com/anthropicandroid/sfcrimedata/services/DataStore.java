@@ -1,7 +1,6 @@
 package com.anthropicandroid.sfcrimedata.services;
 
 import android.content.Context;
-import android.util.Log;
 
 import net.rehacktive.waspdb.WaspDb;
 import net.rehacktive.waspdb.WaspFactory;
@@ -14,7 +13,6 @@ import java.util.List;
 
 import rx.Observable;
 import rx.Subscriber;
-import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.observables.ConnectableObservable;
 import rx.schedulers.Schedulers;
@@ -30,7 +28,6 @@ public class DataStore {
     private final ConnectableObservable<Boolean> dbCreate;
     private WaspHash districtActivityHash;
     private WaspHash districtDataHash;
-    private WaspHash districtRankingHash;
 
     public DataStore(final Context context) {
         dbCreate = Observable
@@ -61,7 +58,6 @@ public class DataStore {
     private void initTables(WaspDb waspDb) {
         if (this.waspDb == null) {
             this.waspDb = waspDb;
-            districtRankingHash = waspDb.openOrCreateHash("DistrictRankingHash");
             districtActivityHash = waspDb.openOrCreateHash("DistrictActivityHash");
             districtDataHash = waspDb.openOrCreateHash("DistrictDataHash");
         }
@@ -72,70 +68,37 @@ public class DataStore {
         return dbCreate.map(new Func1<Boolean, List<String>>() {
             @Override
             public List<String> call(Boolean aBoolean) {
-                return districtActivityHash.getAllKeys();
+                return districtDataHash.getAllKeys();
             }
         }).take(1);
     }
 
-    public Observable<Boolean> saveDistrictActivity(
-            final String district,
-            final Integer districtActivity) {
+    public Observable<List<JSONObject>> getMarkersForDistrict(final String district) {
+        return dbCreate
+                .map(new Func1<Boolean, List<JSONObject>>() {
+                    @Override
+                    public List<JSONObject> call(Boolean aBoolean) {
+                        return districtDataHash.get(district);
+                    }
+                });
+    }
+
+    public Observable<Boolean> setMarkersForDistrict(
+            final List<JSONObject> newMarkers, final String
+            district) {
         return dbCreate
                 .map(new Func1<Boolean, Boolean>() {
                     @Override
                     public Boolean call(Boolean aBoolean) {
-                        Integer storedDistrictActivity = districtActivityHash.get(district);
-                        if (storedDistrictActivity != null
-                                && storedDistrictActivity.equals(districtActivity))
+                        List oldMarkers = districtDataHash.get(district);
+                        if (oldMarkers == null) {
+                            districtDataHash.put(district, newMarkers);
+                            return true;
+                        } else if (newMarkers == null || oldMarkers.equals(newMarkers))
                             return false;
-                        districtActivityHash.put(district, districtActivity);
+                        districtDataHash.put(district, newMarkers);
                         return true;
                     }
-                })
-                .take(1);
-    }
-
-    public Observable<List<JSONObject>> getMarkersForDistrict(String district) {
-        Log.d(TAG, "getmarkers for dist");
-        return null;
-    }
-
-    public List<String> getDistrictsByMostActivity() {
-        return dbCreate
-                .flatMap(new Func1<Boolean, Observable<String>>() {
-                    @Override
-                    public Observable<String> call(Boolean aBoolean) {
-                        return Observable
-                                .range(0, districtRankingHash.getAllKeys().size())
-                                .concatMap(new Func1<Integer, Observable<? extends String>>() {
-                                    @Override
-                                    public Observable<? extends String> call(Integer integer) {
-                                        return Observable
-                                                .just((String) districtRankingHash.get(integer));
-                                    }
-                                })
-                                .filter(new Func1<String, Boolean>() {
-                                    @Override
-                                    public Boolean call(String s) {
-                                        return s != null;
-                                    }
-                                });
-                    }
-                })
-                .toList()
-                .toBlocking()
-                .first();
-    }
-
-    public void setDistrictRankingsByDescendingActivity(final List<String> districtsInOrder) {
-        districtRankingHash.flush();
-        Observable
-                .range(0, districtsInOrder.size())
-                .doOnNext(new Action1<Integer>() {
-                    @Override
-                    public void call(Integer integer) {
-                        districtRankingHash.put(integer, districtsInOrder.remove(integer));
-                    }
-                }).subscribe();
+                });
     }
 }
